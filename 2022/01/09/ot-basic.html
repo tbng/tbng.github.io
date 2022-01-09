@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Some notes from Computational OT book</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="blog, accent, , Binh T. Nguyen, jekyll">
+    <meta name="author" content="">
+    
+    
+    
+    <meta name="description" content="">
+    <link href='https://fonts.googleapis.com/css?family=Piazzolla:400,700' rel='stylesheet' type='text/css'>
+    <link rel="alternate" type="application/rss+xml" title="Binh T. Nguyen RSS" href="/feed.xml" />
+    <link rel="stylesheet" href="/css/main.css">
+    
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="navbar container">
+            
+            <a id="author-name" class="alignable pull-left" href="">Binh T. Nguyen</a>
+            <ul id="navlist" class="alignable pull-right navbar-ul">
+                
+                    
+                        <li class="alignable pull-left nav-list"><a href="/research.html">Research</a>
+                    
+                    
+                        &nbsp;&nbsp;|
+                    
+                        </li>
+                
+                    
+                        <li class="alignable pull-left nav-list"><a href="/blog.html">Posts</a>
+                    
+                    
+                        </li>
+                
+            </ul>
+        </div>
+        <div style="clear:both"></div>
+        <hr>
+        
+            <div class="container content">
+        
+        <div style="text-align: justify;"> <center>
+  <h1 style="color:#FF0F00">Some notes from Computational OT book </h1>
+  <i style="color:gray">Posted on January 09, 2022 by B.N. </i>
+</center>
+
+<style>
+  post-content {
+      line-height: 2.0;
+  }
+</style>
+    
+<post-content><p>This post is a short summary of the first 4 chapters of the excellent book “Computational Optimal Transport”, written by <span class="citation" data-cites="peyre_computational_2019">[1]</span>.</p>
+<!-- Latex custom command block -->
+<!-- End block -->
+<h1 id="i.-monges-optimal-transport-problem">I. Monge’s Optimal Transport Problem</h1>
+<p>The original optimal transport problem was proposed by <span class="citation" data-cites="monge_memoire_1781">[2]</span> : given two densities of mass <span class="math inline">\(f, g \geq 0\)</span> on <span class="math inline">\(\mathbb{R}^d\)</span>, with <span class="math inline">\(\int f = \int g = 1\)</span>, find a measurable map <span class="math inline">\(T: \mathbb{R}^d \to \mathbb{R}^d\)</span> pushing <span class="math inline">\(f\)</span> into <span class="math inline">\(g\)</span>, </p>
+<p><span class="math display">\[\begin{equation*}
+ \int_A g(x)dx = \int_{T^{-1}(A)} f(y) dy 
+\end{equation*}\]</span></p>
+<p>for any Borel subset <span class="math inline">\(A \in \mathbb{R}^d\)</span>, and at the same time, minimizing the quantity</p>
+<p><span class="math display">\[\begin{equation*}
+  \int_{\mathbb{R}^d} \lvert T(x) - x \rvert f(x) dx.
+\end{equation*}\]</span></p>
+<p>The measurable map <span class="math inline">\(T: \mathcal{X}\to \mathcal{Y}\)</span> is called push-forward operator, and the measure <span class="math inline">\(T_{\#}\mu\)</span> on <span class="math inline">\(\mathcal{Y}\)</span> is called push-forward measure (the image measure of a measure <span class="math inline">\(\mu\)</span> on <span class="math inline">\(\mathcal{X}\)</span>), characterized by</p>
+<p><span class="math display">\[\begin{align*}
+  (T_{\#}\mu)(A) &amp;= \mu(T^{-1}(A)) \quad \text{for every measurable set } A, \\
+  \text {or } \int_{\mathcal{Y}} \phi \ d(T_{\#}\mu)
+                 &amp;= \int_{\mathcal{Y}} \phi \circ T d\mu \quad \text{for every measurable function } \phi.
+\end{align*}\]</span></p>
+<p>Until now, this formulation has remained unsolved, even without analyses on characterizations of a minimizer.</p>
+<h1 id="kantorovics-relaxation-of-monges-problem-general-case">2. Kantorovic’s Relaxation of Monge’s Problem: General Case</h1>
+<p>Progress was made with the relaxation of the Monge’s problem with the work of <span class="citation" data-cites="kantorovich_translocation_1942">[3]</span>, which most of the formulations of optimal transport problems is based on nowadays.</p>
+<p>Instead of the Euclidean distance in Monge’s problem, Kantorovic introduced a general cost function <span class="math inline">\(c(x, y)\)</span>. More specifically, consider a metric space <span class="math inline">\(\mathcal{X}\)</span>, and let <span class="math inline">\(c: \mathcal{X}\times \mathcal{X}\to [0, +\infty]\)</span> be a cost function. The Kantorovic’s problem of optimal transport for two probability measures <span class="math inline">\(\mu, \nu \in \mathcal{P}(\mathcal{X})\)</span> reads</p>
+<p><span class="math display">\[\begin{equation}
+  \label{eq:kantorovich-ot}
+  \min_{\pi \in \Pi(\mu, \nu)} \int_{\mathcal{X}\times \mathcal{X}} c(\mu, \nu) d\pi,
+\end{equation}\]</span></p>
+<p>where <span class="math inline">\(\Pi(\mu, \nu)\)</span> is the set of feasible transport plans, i.e.</p>
+<p><span class="math display">\[\begin{equation*}
+  \Pi(\mu, \nu) \stackrel{\text{def.}}{=}\{ \pi \in \mathcal{P}(\mathcal{X}\times \mathcal{X}) \mid (P_0)_{\#}\pi =
+  \mu, (P_1)_{\#}\pi = \nu \},
+\end{equation*}\]</span></p>
+<p>where <span class="math inline">\((P_0)_{\#}\)</span> <span class="math inline">\((P_1)_{\#}\)</span> are the push-forwards of the projections of <span class="math inline">\(\mathcal{X}\times \mathcal{X}\)</span> onto its factors.</p>
+<h1 id="kantorovic-relaxation-discrete-case-kp-discrete">3. Kantorovic Relaxation: Discrete Case (KP-discrete)</h1>
+<p>We denote <span class="math inline">\(\alpha\)</span> a discrete measure with weights <span class="math inline">\(\mathbf{a}\)</span> and locations <span class="math inline">\(x_1, \dots, x_n \in \mathcal{X}\)</span>, such that</p>
+<p><span class="math display">\[\begin{equation*}
+  \alpha = \sum_{i = 0}^n \mathbf{a}_i\delta_{x_i},
+\end{equation*}\]</span></p>
+<p>where <span class="math inline">\(\delta_{x_i}\)</span> is the Dirac at position <span class="math inline">\(x\)</span>. We assume the vector of weights <span class="math inline">\(\mathbf{a}\)</span> (or the vector of points of a histogram) belongs to the probability simplex</p>
+<p><span class="math display">\[\begin{equation*}
+  \Sigma_n \stackrel{\text{def.}}{=}\left\{\mathbf{a}\in \mathbb{R}_+^n : \sum_{i = 0}^n \mathbf{a}_i = 1  \right\}.
+\end{equation*}\]</span></p>
+<p>Let <span class="math inline">\(\mathbf{P}\in \mathbb{R}_+^{n \times m}\)</span> denotes a coupling matrix, which describes the amount of mass flowing between locations. The set of admissible couplings (or feasible transport plans) is denoted</p>
+<p><span class="math display">\[\begin{equation*}
+  \mathbf{U}(\mathbf{a}, \mathbf{b}) \stackrel{\text{def.}}{=}\left\{\mathbf{P}\in \mathbb{R}_+^{n \times m}:
+    \mathbf{P}\mathbf{1}_{m} = \mathbf{a}, \mathbf{P}^T\mathbf{1}_{n} = \mathbf{b}\right\}.
+\end{equation*}\]</span></p>
+<p>The discrete Kantorovic problem reads</p>
+<p><span class="math display">\[\begin{equation}
+  \label{eq:kanto-discrete}  
+  L_{\mathbf{C}}(\mathbf{a}, \mathbf{b}) = \min_{\mathbf{P}\in \mathbf{U}(\mathbf{a}, \mathbf{b})} \langle \mathbf{C}, \mathbf{P} \rangle \stackrel{\text{def.}}{=}
+  \sum_{i, j} \mathbf{C}_{i,j}\mathbf{P}_{i,j},
+\end{equation}\]</span></p>
+<p>where <span class="math inline">\(\mathbf{C}\)</span> is the (given) transport cost matrix.</p>
+<h1 id="entropic-relaxation-of-kp-discrete-and-sinkhorns-algorithm">4. Entropic Relaxation of KP-discrete and Sinkhorn’s Algorithm</h1>
+<p>The Kantorovic problem, while solvable, is computationally costly, and there might exist several optimal solutions. One of the popular soluton is entropic optimal transport and Sinkhorn’s algorithm, introduced in <span class="citation" data-cites="cuturi_sinkhorn_2013">[4]</span>. The idea is to introduce an entropy regularization term to approximate a solution to Eq.<span class="math inline">\(\eqref{eq:kanto-discrete}\)</span>, which reads</p>
+<p><span class="math display">\[\begin{equation}
+  \label{eq:kanto-discrete-entropic}
+  L_{\mathbf{C}}^{\varepsilon}(\mathbf{a}, \mathbf{b}) = \min_{\mathbf{P}\in \mathbf{U}(\mathbf{a}, \mathbf{b})}
+  \langle \mathbf{C}, \mathbf{P} \rangle - \varepsilon\mathbf{H}(\mathbf{P}),
+\end{equation}\]</span></p>
+<p>where <span class="math inline">\(\mathbf{H}(\mathbf{P})\)</span> is the discrete entropy</p>
+<p><span class="math display">\[\begin{equation}
+  \label{eq:discrete-entropy}
+  \mathbf{H}(\mathbf{P}) = -\sum_{i, j} \mathbf{P}_{i,j}[\log(\mathbf{P}_{i,j}) - 1].
+\end{equation}\]</span></p>
+<p>The introduction of entropic regularization term makes problem in Eq.<span class="math inline">\(\eqref{eq:kanto-discrete-entropic}\)</span> having a unique, closed form solution.</p>
+<p><strong>Proposition 1. (Prop. 4.3. <span class="citation" data-cites="peyre_computational_2019">[1]</span>)</strong> The solution to Eq.<span class="math inline">\(\eqref{eq:kanto-discrete-entropic}\)</span> is unique, and has the form</p>
+<p><span class="math display">\[\begin{equation}
+    \label{eq:entropic-solution}
+    \forall (i, j) \in [n] \times [m], \quad \mathbf{P}_{i,j} = \mathbf{u}_i \mathbf{K}_{i,j}\mathbf{v}_j,
+  \end{equation}\]</span></p>
+<p>where <span class="math inline">\(\mathbf{K}_{i,j} \stackrel{\text{def.}}{=}e^{-\mathbf{C}_{i,j}/\varepsilon}\)</span> the associated Gibbs kernel with the cost matrix <span class="math inline">\(\mathbf{C}\)</span>, and <span class="math inline">\((\mathbf{u}, \mathbf{v}) \in \mathbb{R}^n_+ \times \mathbb{R}^m_+\)</span> two unknown scaling variables.</p>
+<p><strong>Proof</strong> The proof is quite straightforward, by introducing two dual potentials <span class="math inline">\(\bf \in \mathbb{R}^n_+, \mathbf{g}\in \mathbb{R}^m_+\)</span>, writing down the Lagrangian and its FOC. For more details see page 63 of <span class="citation" data-cites="peyre_computational_2019">[1]</span>. <span class="math inline">\(\square\)</span></p>
+<p>With this closed form solution, one can factorized the optimized transport plan as</p>
+<p><span class="math display">\[\begin{equation*}
+  \mathbf{P}= \text{diag}{(\mathbf{u})}\mathbf{K}\text{diag}{(\mathbf{v})}.
+\end{equation*}\]</span></p>
+<p>Coupled with the fact that the optimal solution must satisfy the non-linear constraints</p>
+<p><span class="math display">\[\begin{align*}
+  \text{diag}{(\mathbf{u})}\mathbf{K}\text{diag}{(\mathbf{v})} \mathbf{1}_{m} &amp;= \text{diag}{(\mathbf{u})}\mathbf{K}\mathbf{v}= \mathbf{a}, \\
+  \text{diag}{(\mathbf{v})}\mathbf{K}^\top\mathbf{u}&amp;= \mathbf{b},
+\end{align*}\]</span></p>
+<p>or equivalently</p>
+<p><span class="math display">\[\begin{align*}
+  \mathbf{u}\odot (\mathbf{K}\mathbf{v}) &amp;= \mathbf{a}, \\
+  \mathbf{v}\odot (\mathbf{K}^\top\mathbf{u}) &amp;= \mathbf{b},
+\end{align*}\]</span></p>
+<p>where <span class="math inline">\(\odot\)</span> denotes element-wise vector multiplications. This leads to the Sinkhorn’s algorithm <span class="citation" data-cites="cuturi_sinkhorn_2013">[4]</span>, which allows solving large-scale optimal transport problem by parallelization. One can initiate <span class="math inline">\(\mathbf{v}^{(0)} = \mathbf{1}_{m}\)</span>, then do the update</p>
+<p><span class="math display">\[\begin{equation}
+  \label{eq:sinkhorn-update}
+  \mathbf{u}^{(l + 1)} = \dfrac{\mathbf{a}}{\mathbf{K}\mathbf{v}^{(l)}}, \quad \text{and} \quad
+  \mathbf{v}^{(l + 1)} = \dfrac{\mathbf{b}}{\mathbf{K}^\top\mathbf{u}^{(l + 1)}},
+\end{equation}\]</span></p>
+<p>in which the divisions are done element-wise. This iteration actually converges to the unique optimal value, a result proven in <span class="citation" data-cites="sinkhorn_relationship_1964">[5]</span> (hence his association with the algorithm, although Sinkhorn was not the inventor of the iteration scheme). A huge advantage of this approach is that the matrix operations can be parallelized using multiple CPU cores, or better, with GPUs, which makes Sinkhorn’s algorithm perform well even with large scale data.</p>
+<div id="refs" class="references csl-bib-body" role="doc-bibliography">
+<div id="ref-peyre_computational_2019" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline"><span class="smallcaps">Peyré</span>, G. and <span class="smallcaps">Cuturi</span>, M. (2019). Computational <span>Optimal</span> <span>Transport</span>: <span>With</span> <span>Applications</span> to <span>Data</span> <span>Science</span>. <em>Foundations and Trends® in Machine Learning</em> <strong>11</strong> 355–607.</div>
+</div>
+<div id="ref-monge_memoire_1781" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Monge</span>, G. (1781). M<span>é</span>moire sur la th<span>é</span>orie des d<span>é</span>blais et des remblais. <em>Histoire de l’Acad<span>é</span>mie Royale des Sciences de Paris</em>.</div>
+</div>
+<div id="ref-kantorovich_translocation_1942" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline"><span class="smallcaps">Kantorovich</span>, L. V. (1942). On the translocation of masses. In <em>Dokl. Akad. Nauk. USSR (NS)</em> vol 37 pp 199–201.</div>
+</div>
+<div id="ref-cuturi_sinkhorn_2013" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline"><span class="smallcaps">Cuturi</span>, M. (2013). Sinkhorn distances: Lightspeed computation of optimal transport. <em>Advances in neural information processing systems</em> <strong>26</strong> 2292–300.</div>
+</div>
+<div id="ref-sinkhorn_relationship_1964" class="csl-entry" role="doc-biblioentry">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="smallcaps">Sinkhorn</span>, R. (1964). A relationship between arbitrary positive matrices and doubly stochastic matrices. <em>The annals of mathematical statistics</em> <strong>35</strong> 876–9.</div>
+</div>
+</div>
+</post-content>
+ </div>
+                
+                    <hr />
+                    <p style="text-align: center; margin-bottom: 10px">
+                    <a href="" style="color: black"><small>Last update: 08/01/2022</small></a>
+                    </p>
+                
+            </div>
+    </div>
+     <!-- MathJax (Latex) block -->
+     <script type="text/javascript">
+       window.MathJax = {
+	   loader: {load: ['[tex]/color']},
+	   TeX: {
+	       packages: {'[+]': ['color']},
+	       extensions: [
+		   "AMSmath.js",
+		   "AMSsymbols.js",],
+	       equationNumbers: { autoNumber: "all" },
+	   }
+       };
+     </script>
+     <script type="text/javascript"
+             src="/files/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+     </script>
+</body>
+<footer>
+</footer>
