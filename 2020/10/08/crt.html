@@ -72,145 +72,493 @@
   }
 </style>
     
-<post-content><p><a href="https://en.wikipedia.org/wiki/Multiple_testing">Multiple hypothesis testing</a> in <a href="https://en.wikipedia.org/wiki/High-dimensional_statistics">high-dimension</a>, where the number of observations is much smaller than the number of hypotheses, is a hard problem due to the restrictiveness in both computational and statistical aspects. To be more precise, the problem we are dealing with here is <strong>conditional independence testing</strong>, i.e. multivariate inference in high-dimension, as opposed to univariate inference problem that is already well-studied. There has been several studies that attempted to formalize this negative (hardness) result. As an example, the reader can refer to <span class="citation" data-cites="shah_hardness_2020">[1]</span> for more detail.</p>
-<p>This post is a review of a recently introduced procedure called <strong>Conditional Randomization Test (CRT) <span class="citation" data-cites="candes_panning_2018">[2]</span> and its distillation version (dCRT) <span class="citation" data-cites="liu_fast_2020">[3]</span></strong>, which shows promise in dealing with the hardness of conditional independence testing in high-dimension. We begin by formalize our problem.</p>
+<post-content><p><a href="https://en.wikipedia.org/wiki/Multiple_testing">Multiple
+hypothesis testing</a> in <a
+href="https://en.wikipedia.org/wiki/High-dimensional_statistics">high-dimension</a>,
+where the number of observations is much smaller than the number of
+hypotheses, is a hard problem due to the restrictiveness in both
+computational and statistical aspects. To be more precise, the problem
+we are dealing with here is <strong>conditional independence
+testing</strong>, i.e. multivariate inference in high-dimension, as
+opposed to univariate inference problem that is already well-studied.
+There has been several studies that attempted to formalize this negative
+(hardness) result. As an example, the reader can refer to <span
+class="citation" data-cites="shah_hardness_2020">[1]</span> for more
+detail.</p>
+<p>This post is a review of a recently introduced procedure called
+<strong>Conditional Randomization Test (CRT) <span class="citation"
+data-cites="candes_panning_2018">[2]</span> and its distillation version
+(dCRT) <span class="citation"
+data-cites="liu_fast_2020">[3]</span></strong>, which shows promise in
+dealing with the hardness of conditional independence testing in
+high-dimension. We begin by formalize our problem.</p>
 <!-- Latex custom command block -->
 <!-- End block -->
 <h1 id="i.-preliminaries">I. Preliminaries</h1>
-<p>Let <span class="math inline">\(\mathcal{D} = \{\mathbf{x_i}, y_i \}^n_{i=1}\)</span> denote a dataset of <span class="math inline">\(n\)</span> i.i.d observations. For each <span class="math inline">\(i = \{1, 2, \dots, n\}\)</span>, the vector <span class="math inline">\(\mathbf{x}_i \in \mathbb{R}^p\)</span> is one observation of <span class="math inline">\(p\)</span> variables and <span class="math inline">\(y_i\)</span> its response. In real-life, <span class="math inline">\(\mathbf{x}_i\)</span> could be the profile of user <span class="math inline">\(i\)</span> on YouTube (gender, age, country of residence, watching history, etc.), with <span class="math inline">\(y_i\)</span> is the most recent video she watched. In the form of matrix representation, the design matrix with each row corresponds to one observation in <span class="math inline">\(\mathcal{D}\)</span> will be denoted <span class="math inline">\(\mathbf{X} \in \mathbb{R}^{n \times p}\)</span>, and <span class="math inline">\(\mathbf{y} \in \mathbb{R}^n\)</span> the response vector. For this system of notation, the <strong>conditional independence testing</strong> problem is defined to be the task of simultaneously testing <span class="math inline">\(m\)</span> hypotheses:</p>
+<p>Let <span class="math inline">\(\mathcal{D} = \{\mathbf{x_i}, y_i
+\}^n_{i=1}\)</span> denote a dataset of <span
+class="math inline">\(n\)</span> i.i.d observations. For each <span
+class="math inline">\(i = \{1, 2, \dots, n\}\)</span>, the vector <span
+class="math inline">\(\mathbf{x}_i \in \mathbb{R}^p\)</span> is one
+observation of <span class="math inline">\(p\)</span> variables and
+<span class="math inline">\(y_i\)</span> its response. In real-life,
+<span class="math inline">\(\mathbf{x}_i\)</span> could be the profile
+of user <span class="math inline">\(i\)</span> on YouTube (gender, age,
+country of residence, watching history, etc.), with <span
+class="math inline">\(y_i\)</span> is the most recent video she watched.
+In the form of matrix representation, the design matrix with each row
+corresponds to one observation in <span
+class="math inline">\(\mathcal{D}\)</span> will be denoted <span
+class="math inline">\(\mathbf{X} \in \mathbb{R}^{n \times p}\)</span>,
+and <span class="math inline">\(\mathbf{y} \in \mathbb{R}^n\)</span> the
+response vector. For this system of notation, the <strong>conditional
+independence testing</strong> problem is defined to be the task of
+simultaneously testing <span class="math inline">\(m\)</span>
+hypotheses:</p>
 <p><span class="math display">\[
-\text{(null) }\mathcal{H}_{0j}: \mathbf{x_j} \perp \!y_j \mid \mathbf{X}_{-j} \quad \text{vs.} 
-    \quad \text{(alternative) } \mathcal{H}_{\alpha j}: \mathbf{x_j} \not\perp \!y_j \mid \mathbf{X}_{-j},
+\text{(null) }\mathcal{H}_{0j}: \mathbf{x_j} \perp \!y_j \mid
+\mathbf{X}_{-j} \quad \text{vs.}
+    \quad \text{(alternative) } \mathcal{H}_{\alpha j}: \mathbf{x_j}
+\not\perp \!y_j \mid \mathbf{X}_{-j},
 \]</span></p>
-<p>for all <span class="math inline">\(j \in [m] = \{1, 2, \dots, m \}\)</span>. Here <span class="math inline">\(\mathbf{X}_{-j}\)</span> is a matrix of size <span class="math inline">\(n \times (p - 1)\)</span>, which is the result of removing column <span class="math inline">\(j\)</span> from <span class="math inline">\(\mathbf{X}\)</span>. As a continuation with the analogy of our user on YouTube, the goal of this hypothesis testing problem would be to tell which attribute <span class="math inline">\(j\)</span> on her profile have direct influence on the choice of her videos <em>conditional</em> to the other attributes <span class="math inline">\(\mathbf{X}_{-j}\)</span>.</p>
-<p>Although in theory the number of test <span class="math inline">\(m\)</span> can be smaller than the number of variables <span class="math inline">\(p\)</span>, to simplify matters we will assume they are equal. If we further assume the reletionship between <span class="math inline">\(\mathbf{X}\)</span> and <span class="math inline">\(\mathbf{y}\)</span> follows the linear equation</p>
+<p>for all <span class="math inline">\(j \in [m] = \{1, 2, \dots, m
+\}\)</span>. Here <span class="math inline">\(\mathbf{X}_{-j}\)</span>
+is a matrix of size <span class="math inline">\(n \times (p -
+1)\)</span>, which is the result of removing column <span
+class="math inline">\(j\)</span> from <span
+class="math inline">\(\mathbf{X}\)</span>. As a continuation with the
+analogy of our user on YouTube, the goal of this hypothesis testing
+problem would be to tell which attribute <span
+class="math inline">\(j\)</span> on her profile have direct influence on
+the choice of her videos <em>conditional</em> to the other attributes
+<span class="math inline">\(\mathbf{X}_{-j}\)</span>.</p>
+<p>Although in theory the number of test <span
+class="math inline">\(m\)</span> can be smaller than the number of
+variables <span class="math inline">\(p\)</span>, to simplify matters we
+will assume they are equal. If we further assume the reletionship
+between <span class="math inline">\(\mathbf{X}\)</span> and <span
+class="math inline">\(\mathbf{y}\)</span> follows the linear
+equation</p>
 <p><span class="math display">\[\begin{equation}
-\mathbf{y} = \mathbf{X}\boldsymbol{\beta}^* + \sigma\boldsymbol{\epsilon}
+\mathbf{y} = \mathbf{X}\boldsymbol{\beta}^* +
+\sigma\boldsymbol{\epsilon}
 \label{eq:linear}
 \end{equation}\]</span></p>
-<p>where <span class="math inline">\(\boldsymbol{\beta}^* \in \mathbb{R}^p\)</span> the vector of true signals, <span class="math inline">\(\boldsymbol{\epsilon} \sim \mathcal{N}(0, \mathbf{I}_n)\)</span> the Gaussian noise vector and <span class="math inline">\(\sigma\)</span> the noise magnitude, then the null and alternative hypotheses can be simplified into</p>
-<p><span class="math display">\[ 
+<p>where <span class="math inline">\(\boldsymbol{\beta}^* \in
+\mathbb{R}^p\)</span> the vector of true signals, <span
+class="math inline">\(\boldsymbol{\epsilon} \sim \mathcal{N}(0,
+\mathbf{I}_n)\)</span> the Gaussian noise vector and <span
+class="math inline">\(\sigma\)</span> the noise magnitude, then the null
+and alternative hypotheses can be simplified into</p>
+<p><span class="math display">\[
 \text{(null) }\mathcal{H}_{0j}: \beta_j^* = 0 \quad \text{vs.}
 \quad \text{(alternative) }\mathcal{H}_{\alpha j}: \beta_j^* \neq 0.  
 \]</span></p>
-<p>Equation \eqref{eq:linear} shows what is called the <strong>linear assumption</strong> between <span class="math inline">\(\mathbf{X}\)</span> and <span class="math inline">\(\mathbf{y}\)</span>, a rather popular assumption in statistical inference literature of both theory and practice.</p>
-<p>Nowadays, with the increasingly complexity of dataset, one often finds the trouble of dealing with high-dimensional data more frequently. Formally, high-dimension regime is defined to be the setting where the number of observations <span class="math inline">\(n\)</span> is (much) smaller than the number of variables <span class="math inline">\(p\)</span>. Doing inference on this regime is problematic. Besides obvious computational issue (<span class="math inline">\(p\)</span> can go as big as over hundred thousands in genetics dataset, for example), the main statistical issue that makes conditional independence testing highly non-trivial is that classical asymptotic normality assumption does not hold <span class="citation" data-cites="bayati_lasso_2010">[5]</span>. In particular, some most popular forms of regularization, like the Ridge or Lasso <span class="citation" data-cites="tibshirani_regression_1996">[6]</span> (with <span class="math inline">\(\ell_2\)</span> and <span class="math inline">\(\ell_1\)</span> term regularization added, respectively), do the estimation of <span class="math inline">\(\boldsymbol{\beta}^*\)</span> quite effectively but leave no valid way to derive test statistic with nice analytic distribution. Therefore, finding the corresponding p-value of each hypotheses is also not possible.</p>
-<p>One of the recent advances to tackle this problem is the Debiased (or Desparsified) Lasso, introduced around the same period by two lines of studies <span class="citation" data-cites="javanmard_confidence_2014">[8]</span>. These studies point out that the solution <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\text{LASSO}}(\lambda)\)</span> of the Lasso program</p>
+<p>Equation \eqref{eq:linear} shows what is called the <strong>linear
+assumption</strong> between <span
+class="math inline">\(\mathbf{X}\)</span> and <span
+class="math inline">\(\mathbf{y}\)</span>, a rather popular assumption
+in statistical inference literature of both theory and practice.</p>
+<p>Nowadays, with the increasingly complexity of dataset, one often
+finds the trouble of dealing with high-dimensional data more frequently.
+Formally, high-dimension regime is defined to be the setting where the
+number of observations <span class="math inline">\(n\)</span> is (much)
+smaller than the number of variables <span
+class="math inline">\(p\)</span>. Doing inference on this regime is
+problematic. Besides obvious computational issue (<span
+class="math inline">\(p\)</span> can go as big as over hundred thousands
+in genetics dataset, for example), the main statistical issue that makes
+conditional independence testing highly non-trivial is that classical
+asymptotic normality assumption does not hold <span class="citation"
+data-cites="bayati_lasso_2010">[5]</span>. In particular, some most
+popular forms of regularization, like the Ridge or Lasso <span
+class="citation" data-cites="tibshirani_regression_1996">[6]</span>
+(with <span class="math inline">\(\ell_2\)</span> and <span
+class="math inline">\(\ell_1\)</span> term regularization added,
+respectively), do the estimation of <span
+class="math inline">\(\boldsymbol{\beta}^*\)</span> quite effectively
+but leave no valid way to derive test statistic with nice analytic
+distribution. Therefore, finding the corresponding p-value of each
+hypotheses is also not possible.</p>
+<p>One of the recent advances to tackle this problem is the Debiased (or
+Desparsified) Lasso, introduced around the same period by two lines of
+studies <span class="citation"
+data-cites="javanmard_confidence_2014">[8]</span>. These studies point
+out that the solution <span
+class="math inline">\(\hat{\boldsymbol{\beta}}^{\text{LASSO}}(\lambda)\)</span>
+of the Lasso program</p>
 <p><span class="math display">\[\begin{equation}
   \label{eq:lasso}
-  \hat{\boldsymbol{\beta}}^{\text{LASSO}}(\lambda) = \text{argmin}_{\boldsymbol{\beta} \in \mathbb{R}^{p}}
-  \dfrac{1}{2} \left\lVert {\mathbf{y} - \mathbf{X}\boldsymbol{\beta}} \right\rVert_2^2 + \lambda\left\lVert {\boldsymbol{\beta}} \right\rVert_1,
+  \hat{\boldsymbol{\beta}}^{\text{LASSO}}(\lambda) =
+\text{argmin}_{\boldsymbol{\beta} \in \mathbb{R}^{p}}
+  \dfrac{1}{2} \left\lVert {\mathbf{y} - \mathbf{X}\boldsymbol{\beta}}
+\right\rVert_2^2 + \lambda\left\lVert {\boldsymbol{\beta}}
+\right\rVert_1,
 \end{equation}\]</span></p>
-<p>is in fact bias. They also proposed a debiasing step to fix this problem. This makes <span class="math inline">\(\hat{\boldsymbol{\beta}}^{\text{LASSO}}(\lambda)\)</span> follow standard Normal distribution asymptotically, which further implies that a valid p-value and a confidence interval of the estimator for each variable can be derived.</p>
-<p>As an alternative to this approach, <span class="citation" data-cites="candes_panning_2018">[2]</span> introduces a procedure called <strong>Conditional Randomization Test (CRT)</strong> that can also output valid p-value in high-dimensional regime. We will review this procedure with its variant distilled CRT <span class="citation" data-cites="liu_fast_2020">[3]</span> in the next sections.</p>
-<h1 id="ii.-the-conditional-randomization-test">II. The Conditional Randomization Test</h1>
-<p>The conditional randomization test was first introduced in <span class="citation" data-cites="candes_panning_2018">[2]</span>, although quite briefly since the main purpose of this paper is in fact presenting <a href="https://web.stanford.edu/group/candes/knockoffs/papers.html">knockoff filter</a>, a False Discovery Rate (FDR) controlling procedure. The knockoff filter does not produce p-values by itself, which in turns can be both an advantage (that it does not need p-values for FDR controlling) and disadvantage (the original knockoff can only do FDR controlling). As a result, CRT is mentioned as a close cousin of knockoff as one way to output valid empirical p-values. We will leave the elaborated discussion of knockoff filter in the future post, and provide here an algorithm block of CRT.</p>
+<p>is in fact bias. They also proposed a debiasing step to fix this
+problem. This makes <span
+class="math inline">\(\hat{\boldsymbol{\beta}}^{\text{LASSO}}(\lambda)\)</span>
+follow standard Normal distribution asymptotically, which further
+implies that a valid p-value and a confidence interval of the estimator
+for each variable can be derived.</p>
+<p>As an alternative to this approach, <span class="citation"
+data-cites="candes_panning_2018">[2]</span> introduces a procedure
+called <strong>Conditional Randomization Test (CRT)</strong> that can
+also output valid p-value in high-dimensional regime. We will review
+this procedure with its variant distilled CRT <span class="citation"
+data-cites="liu_fast_2020">[3]</span> in the next sections.</p>
+<h1 id="ii.-the-conditional-randomization-test">II. The Conditional
+Randomization Test</h1>
+<p>The conditional randomization test was first introduced in <span
+class="citation" data-cites="candes_panning_2018">[2]</span>, although
+quite briefly since the main purpose of this paper is in fact presenting
+<a
+href="https://web.stanford.edu/group/candes/knockoffs/papers.html">knockoff
+filter</a>, a False Discovery Rate (FDR) controlling procedure. The
+knockoff filter does not produce p-values by itself, which in turns can
+be both an advantage (that it does not need p-values for FDR
+controlling) and disadvantage (the original knockoff can only do FDR
+controlling). As a result, CRT is mentioned as a close cousin of
+knockoff as one way to output valid empirical p-values. We will leave
+the elaborated discussion of knockoff filter in the future post, and
+provide here an algorithm block of CRT.</p>
 <hr />
 <p><strong>Algorithm 1: Conditional Randomization Test</strong></p>
-<p><strong>INPUT</strong>: dataset <span class="math inline">\(\mathcal{D} = \{\mathbf{x_i}, y_i \}^n_{i=1}\)</span>, a feature importance statistics <span class="math inline">\(T_j(\mathbf{X}, \mathbf{y})\)</span> for testing whether <span class="math inline">\(\mathbf{x}_j\)</span> and <span class="math inline">\(\mathbf{y}\)</span> are conditionally independent.</p>
-<p><strong>FOR </strong> <span class="math inline">\(j = 1, 2, \dots, p\)</span> do</p>
-<p>     <strong>FOR </strong> <span class="math inline">\(b = 1, 2, \dots, B\)</span> do</p>
-<p>         1. Sampling new column <span class="math inline">\(\mathbf{\tilde{x}}_j \sim \mathcal{P}(\mathbf{x}_j \mid \mathbf{X}_{-j})\)</span></p>
-<p>         2. Combine <span class="math inline">\(\mathbf{\tilde{x}}_j\)</span> with original matrix <span class="math inline">\(\mathbf{X}_{-j}\)</span> to form new matrix <span class="math inline">\(\mathbf{\tilde{X}}^{(b)} \in \mathbb{R}^{n \times p}\)</span></p>
-<p>         3. Compute feature importance <span class="math inline">\(T_j(\mathbf{\tilde{X}}^{(b)}, \mathbf{y})\)</span></p>
+<p><strong>INPUT</strong>: dataset <span
+class="math inline">\(\mathcal{D} = \{\mathbf{x_i}, y_i
+\}^n_{i=1}\)</span>, a feature importance statistics <span
+class="math inline">\(T_j(\mathbf{X}, \mathbf{y})\)</span> for testing
+whether <span class="math inline">\(\mathbf{x}_j\)</span> and <span
+class="math inline">\(\mathbf{y}\)</span> are conditionally
+independent.</p>
+<p><strong>FOR </strong> <span class="math inline">\(j = 1, 2, \dots,
+p\)</span> do</p>
+<p>     <strong>FOR </strong> <span class="math inline">\(b = 1, 2,
+\dots, B\)</span> do</p>
+<p>         1. Sampling new column <span
+class="math inline">\(\mathbf{\tilde{x}}_j \sim \mathcal{P}(\mathbf{x}_j
+\mid \mathbf{X}_{-j})\)</span></p>
+<p>         2. Combine <span
+class="math inline">\(\mathbf{\tilde{x}}_j\)</span> with original matrix
+<span class="math inline">\(\mathbf{X}_{-j}\)</span> to form new matrix
+<span class="math inline">\(\mathbf{\tilde{X}}^{(b)} \in \mathbb{R}^{n
+\times p}\)</span></p>
+<p>         3. Compute feature importance <span
+class="math inline">\(T_j(\mathbf{\tilde{X}}^{(b)},
+\mathbf{y})\)</span></p>
 <p>     Compute (one-sided) p-value</p>
 <p><span class="math display">\[
 p_j = \dfrac{1}{B + 1} \left\{1 + \sum^{B}_{b=1}
-\boldsymbol{1}_{T_j(\mathbf{\tilde{X}}^{(b)}, \mathbf{y}) \geq T_j(\mathbf{X}, \mathbf{y})} \right\}
+\boldsymbol{1}_{T_j(\mathbf{\tilde{X}}^{(b)}, \mathbf{y}) \geq
+T_j(\mathbf{X}, \mathbf{y})} \right\}
 \]</span></p>
-<p><strong>OUTPUT</strong>: vector of pvalues <span class="math inline">\(\boldsymbol{\pi} = \{p_j\}_{j=1}^p\)</span></p>
+<p><strong>OUTPUT</strong>: vector of pvalues <span
+class="math inline">\(\boldsymbol{\pi} = \{p_j\}_{j=1}^p\)</span></p>
 <hr />
-<p>One of the promises of CRT is its flexibility: the procedure can use different type estimators for p-value sampling because it places no restriction on relationship of variable and responses, e.g. such of linear assumption in Eq. \eqref{eq:linear}. Despite this fact, an obvious huge drawback for the original algorithm is computation. Indeed, the algorithm block shows that CRT requires drawing <span class="math inline">\(B\)</span> bootstraps computation for <strong>each variable</strong>. Assume we use Lasso program from Eq.\eqref{eq:lasso} to compute feature importance <span class="math inline">\(T_j(\mathbf{\tilde{X}}^{(b)}\mathbf{y})\)</span>, CRT runtime would be <span class="math inline">\(\mathcal{O}(Bp^4)\)</span> since Lasso has the optimization cost of <span class="math inline">\(\mathcal{O}(p^3)\)</span> with coordinate descent algorithm (see <span class="citation" data-cites="hastie_elements_2009">[9]</span> pp. 93). With a requirement of large enough <span class="math inline">\(B\)</span> to make the empirical distribution of p-value smooth enough, this runtime is straightforward impossible to achieve when <span class="math inline">\(p\)</span> grows very large. The latter point related to a slightly less problematic issue of CRT, which is it can only output an empirical p-values. A number of bootstraps <span class="math inline">\(B\)</span> too small can lead to no detection of significant variables.</p>
-<p>These are the main motivations of a very recent work of <span class="citation" data-cites="liu_fast_2020">[3]</span>, which introduced the Distilled Conditional Randomization Test.</p>
-<h1 id="iii.-distilled-conditional-randomization-test">III. Distilled Conditional Randomization Test</h1>
-<p>The Distiled CRT (dCRT) is presented in <span class="citation" data-cites="liu_fast_2020">[3]</span> that aims to fix the prohibitive expensiveness in computation of vanilla CRT. This is done through an process called <strong>distillation</strong> operator. A nice additional property of this procedure is that it can directly output an analytical p-value through a feature-importance statistics that follows Gaussian law.</p>
-<p>The key idea behind distillation is that important information of a variable <span class="math inline">\(\mathbf{x}_j\)</span> is “distilled” back to the response <span class="math inline">\(\mathbf{y}\)</span> and to the remaining <span class="math inline">\(j-1\)</span> varibles, i.e. the data matrix <span class="math inline">\(\mathbf{X}_{-j}\)</span>. Although <span class="citation" data-cites="liu_fast_2020">[3]</span> framed dCRT as a general framework for outputting p-values with flexible choice of distillation operator, what will be presented next is a variant called the Lasso Disillation CRT (Lasso-dCRT), which is the variant that the authors of the work have focus mostly on both in theoretical and empirical arguments. This also means we work under the linear-relationship in Eq.\eqref{eq:linear}.</p>
-<p>With the introduction of distillation operator, performing dCRT is straightforward as follows. For each variable <span class="math inline">\(j\)</span>, we form the distillation function <span class="math inline">\(d_y\)</span> and <span class="math inline">\(d_{x_j}\)</span> by first solving two lasso problems</p>
+<p>One of the promises of CRT is its flexibility: the procedure can use
+different type estimators for p-value sampling because it places no
+restriction on relationship of variable and responses, e.g. such of
+linear assumption in Eq. \eqref{eq:linear}. Despite this fact, an
+obvious huge drawback for the original algorithm is computation. Indeed,
+the algorithm block shows that CRT requires drawing <span
+class="math inline">\(B\)</span> bootstraps computation for <strong>each
+variable</strong>. Assume we use Lasso program from Eq.\eqref{eq:lasso}
+to compute feature importance <span
+class="math inline">\(T_j(\mathbf{\tilde{X}}^{(b)}\mathbf{y})\)</span>,
+CRT runtime would be <span
+class="math inline">\(\mathcal{O}(Bp^4)\)</span> since Lasso has the
+optimization cost of <span
+class="math inline">\(\mathcal{O}(p^3)\)</span> with coordinate descent
+algorithm (see <span class="citation"
+data-cites="hastie_elements_2009">[9]</span> pp. 93). With a requirement
+of large enough <span class="math inline">\(B\)</span> to make the
+empirical distribution of p-value smooth enough, this runtime is
+straightforward impossible to achieve when <span
+class="math inline">\(p\)</span> grows very large. The latter point
+related to a slightly less problematic issue of CRT, which is it can
+only output an empirical p-values. A number of bootstraps <span
+class="math inline">\(B\)</span> too small can lead to no detection of
+significant variables.</p>
+<p>These are the main motivations of a very recent work of <span
+class="citation" data-cites="liu_fast_2020">[3]</span>, which introduced
+the Distilled Conditional Randomization Test.</p>
+<h1 id="iii.-distilled-conditional-randomization-test">III. Distilled
+Conditional Randomization Test</h1>
+<p>The Distiled CRT (dCRT) is presented in <span class="citation"
+data-cites="liu_fast_2020">[3]</span> that aims to fix the prohibitive
+expensiveness in computation of vanilla CRT. This is done through an
+process called <strong>distillation</strong> operator. A nice additional
+property of this procedure is that it can directly output an analytical
+p-value through a feature-importance statistics that follows Gaussian
+law.</p>
+<p>The key idea behind distillation is that important information of a
+variable <span class="math inline">\(\mathbf{x}_j\)</span> is
+“distilled” back to the response <span
+class="math inline">\(\mathbf{y}\)</span> and to the remaining <span
+class="math inline">\(j-1\)</span> varibles, i.e. the data matrix <span
+class="math inline">\(\mathbf{X}_{-j}\)</span>. Although <span
+class="citation" data-cites="liu_fast_2020">[3]</span> framed dCRT as a
+general framework for outputting p-values with flexible choice of
+distillation operator, what will be presented next is a variant called
+the Lasso Disillation CRT (Lasso-dCRT), which is the variant that the
+authors of the work have focus mostly on both in theoretical and
+empirical arguments. This also means we work under the
+linear-relationship in Eq.\eqref{eq:linear}.</p>
+<p>With the introduction of distillation operator, performing dCRT is
+straightforward as follows. For each variable <span
+class="math inline">\(j\)</span>, we form the distillation function
+<span class="math inline">\(d_y\)</span> and <span
+class="math inline">\(d_{x_j}\)</span> by first solving two lasso
+problems</p>
 <p><span class="math display">\[\begin{equation}
   \label{eq:beta-dy}
-  \color{green}{\hat{\boldsymbol{\beta}}^{d_{y}}(\lambda)} = \text{argmin}_{\boldsymbol{\beta} \in \mathbb{R}^{p}}
-  \dfrac{1}{2} \left\lVert {\mathbf{y} - \mathbf{X}_{-j}\boldsymbol{\beta}} \right\rVert_2^2 + \lambda\left\lVert {\boldsymbol{\beta}} \right\rVert_1,
+  \color{green}{\hat{\boldsymbol{\beta}}^{d_{y}}(\lambda)} =
+\text{argmin}_{\boldsymbol{\beta} \in \mathbb{R}^{p}}
+  \dfrac{1}{2} \left\lVert {\mathbf{y} -
+\mathbf{X}_{-j}\boldsymbol{\beta}} \right\rVert_2^2 + \lambda\left\lVert
+{\boldsymbol{\beta}} \right\rVert_1,
 \end{equation}\]</span></p>
 <p>and</p>
 <p><span class="math display">\[\begin{equation}
   \label{eq:beta-dx}
-  \color{blue}{\hat{\boldsymbol{\beta}}^{d_{x_j}}(\lambda)} = \text{argmin}_{\boldsymbol{\beta} \in \mathbb{R}^{p}}
-  \dfrac{1}{2} \left\lVert {\mathbf{x}_j - \mathbf{X}_{-j}\boldsymbol{\beta}} \right\rVert_2^2 + \lambda\left\lVert {\boldsymbol{\beta}} \right\rVert_1.
+  \color{blue}{\hat{\boldsymbol{\beta}}^{d_{x_j}}(\lambda)} =
+\text{argmin}_{\boldsymbol{\beta} \in \mathbb{R}^{p}}
+  \dfrac{1}{2} \left\lVert {\mathbf{x}_j -
+\mathbf{X}_{-j}\boldsymbol{\beta}} \right\rVert_2^2 + \lambda\left\lVert
+{\boldsymbol{\beta}} \right\rVert_1.
 \end{equation}\]</span></p>
-<p>Then the distillations <span class="math inline">\(d_y\)</span> and <span class="math inline">\(d_{x_j}\)</span> is defined to be the problems’ estimation residuals</p>
+<p>Then the distillations <span class="math inline">\(d_y\)</span> and
+<span class="math inline">\(d_{x_j}\)</span> is defined to be the
+problems’ estimation residuals</p>
 <p><span class="math display">\[\begin{equation}
   \label{eq:distill}
-    \color{green}{d_y} = \mathbf{y} - \mathbf{X}_{-j}\color{green}{\hat{\boldsymbol{\beta}}^{d_{y}}} \quad \text{and} \quad
-    \color{blue}{d_{x_j}} = \mathbf{x}_j - \mathbf{X}_{-j}\color{blue}{\hat{\boldsymbol{\beta}}^{d_{x_j}}}.
+    \color{green}{d_y} = \mathbf{y} -
+\mathbf{X}_{-j}\color{green}{\hat{\boldsymbol{\beta}}^{d_{y}}} \quad
+\text{and} \quad
+    \color{blue}{d_{x_j}} = \mathbf{x}_j -
+\mathbf{X}_{-j}\color{blue}{\hat{\boldsymbol{\beta}}^{d_{x_j}}}.
 \end{equation}\]</span></p>
 <p>It follows that a test statistic can be calculated by the formula</p>
 <p><span class="math display">\[\begin{equation}
   \label{eq:statistics}
-    T(x_j, y, \color{blue}{d_{x_j}}, \color{green}{d_y}) = \left[(y - \color{green}{d_y})^{T}(x_j - \color{blue}{d_{x_j}})\right]^2,
+    T(x_j, y, \color{blue}{d_{x_j}}, \color{green}{d_y}) = \left[(y -
+\color{green}{d_y})^{T}(x_j - \color{blue}{d_{x_j}})\right]^2,
 \end{equation}\]</span></p>
-<p>and coupled with the fact that <span class="math inline">\((y - \color{green}{d_y})^{T}(x_j - \color{blue}{d_{x_j}}) \sim \mathcal{N}(0, \sigma^2\left\lVert {\mathbf{y} - \color{green}{d_y}} \right\rVert^2)\)</span>, we can output the exact p-value for each variable <span class="math inline">\(j\)</span></p>
+<p>and coupled with the fact that <span class="math inline">\((y -
+\color{green}{d_y})^{T}(x_j - \color{blue}{d_{x_j}}) \sim \mathcal{N}(0,
+\sigma^2\left\lVert {\mathbf{y} - \color{green}{d_y}}
+\right\rVert^2)\)</span>, we can output the exact p-value for each
+variable <span class="math inline">\(j\)</span></p>
 <p><span class="math display">\[\begin{equation}
   \label{eq:pval-crt}
-    p_j = 2\left[1 - \Phi\left( \dfrac{\sqrt{T(x_j, y, \color{blue}{d_{x_j}}, \color{green}{d_y})}}{
-    \sigma\left\lVert {\mathbf{y} - \color{green}{d_y}} \right\rVert} \right) \right],
+    p_j = 2\left[1 - \Phi\left( \dfrac{\sqrt{T(x_j, y,
+\color{blue}{d_{x_j}}, \color{green}{d_y})}}{
+    \sigma\left\lVert {\mathbf{y} - \color{green}{d_y}} \right\rVert}
+\right) \right],
 \end{equation}\]</span></p>
-<p>where <span class="math inline">\(\Phi(\cdot)\)</span> is the standard normal cumulative distribution function (CDF).</p>
-<p>In other words, Lasso-dCRT gains on vanilla CRT by removing bootstrapping steps for each variable. This leads to a reasonable reduction of the computation cost. However, careful reader can still notice that the runtime complexity is still a polynomial of order 4 of <span class="math inline">\(p\)</span>, or <span class="math inline">\(\mathcal{O}(p^4)\)</span>. To deal with this, <span class="citation" data-cites="liu_fast_2020">[3]</span> propose a initial screening step with the assumption that all relevant variables is selected on this step, and set all p-values of unselected variables to 1. The resulting runtime is reduced to be <span class="math inline">\(\mathcal{O}(kp^3)\)</span>, where <span class="math inline">\(k\)</span> is the total number of selected variables post-screening and is often much smaller than <span class="math inline">\(p\)</span> in sparsity regime. More formally, the screening step return the estimation of the support <span class="math inline">\(\hat{\mathcal{S}} := \{j \in [p]: \hat{\beta}_j \neq 0\}\)</span>, and <span class="math inline">\(k\)</span> is the cardinality of this set.</p>
+<p>where <span class="math inline">\(\Phi(\cdot)\)</span> is the
+standard normal cumulative distribution function (CDF).</p>
+<p>In other words, Lasso-dCRT gains on vanilla CRT by removing
+bootstrapping steps for each variable. This leads to a reasonable
+reduction of the computation cost. However, careful reader can still
+notice that the runtime complexity is still a polynomial of order 4 of
+<span class="math inline">\(p\)</span>, or <span
+class="math inline">\(\mathcal{O}(p^4)\)</span>. To deal with this,
+<span class="citation" data-cites="liu_fast_2020">[3]</span> propose a
+initial screening step with the assumption that all relevant variables
+is selected on this step, and set all p-values of unselected variables
+to 1. The resulting runtime is reduced to be <span
+class="math inline">\(\mathcal{O}(kp^3)\)</span>, where <span
+class="math inline">\(k\)</span> is the total number of selected
+variables post-screening and is often much smaller than <span
+class="math inline">\(p\)</span> in sparsity regime. More formally, the
+screening step return the estimation of the support <span
+class="math inline">\(\hat{\mathcal{S}} := \{j \in [p]: \hat{\beta}_j
+\neq 0\}\)</span>, and <span class="math inline">\(k\)</span> is the
+cardinality of this set.</p>
 <p>A full algorithm block is then as follows.</p>
 <hr />
-<p><strong>Algorithm 2: Lasso-Distilled Conditional Randomization Test</strong></p>
-<p><strong>INPUT</strong>: dataset <span class="math inline">\(\mathcal{D} = \{\mathbf{x_i}, y_i \}^n_{i=1}\)</span></p>
-<p><strong>Screening:</strong> Solving the Lasso in Eq. \eqref{eq:lasso}, obtain the estimated support <span class="math inline">\(\hat{\mathcal{S}} := \{j \in [p]: \hat{\beta}_j \neq 0\}\)</span></p>
-<p><strong>FOR </strong> <span class="math inline">\(j \in \hat{\mathcal{S}}\)</span> do</p>
-<p>     1. Obtain <span class="math inline">\(\color{green}{\hat{\boldsymbol{\beta}}^{d_{y}}(\lambda)}, \color{blue}{\hat{\boldsymbol{\beta}}^{d_{x_j}}(\lambda)}\)</span> by solving Eq.\eqref{eq:beta-dy} and Eq.\eqref{eq:beta-dx}</p>
-<p>     2. Obtain <span class="math inline">\(\color{green}{d_y}, \color{blue}{d_{x_j}}\)</span> following Eq.\eqref{eq:distill}</p>
-<p>     3. Compute feature importance <span class="math inline">\(T(x_j, y, \color{blue}{d_{x_j}}, \color{green}{d_y}) = \left[(y - \color{green}{d_y})^{T}(x_j - \color{blue}{d_{x_j}})\right]^2\)</span></p>
+<p><strong>Algorithm 2: Lasso-Distilled Conditional Randomization
+Test</strong></p>
+<p><strong>INPUT</strong>: dataset <span
+class="math inline">\(\mathcal{D} = \{\mathbf{x_i}, y_i
+\}^n_{i=1}\)</span></p>
+<p><strong>Screening:</strong> Solving the Lasso in Eq.
+\eqref{eq:lasso}, obtain the estimated support <span
+class="math inline">\(\hat{\mathcal{S}} := \{j \in [p]: \hat{\beta}_j
+\neq 0\}\)</span></p>
+<p><strong>FOR </strong> <span class="math inline">\(j \in
+\hat{\mathcal{S}}\)</span> do</p>
+<p>     1. Obtain <span
+class="math inline">\(\color{green}{\hat{\boldsymbol{\beta}}^{d_{y}}(\lambda)},
+\color{blue}{\hat{\boldsymbol{\beta}}^{d_{x_j}}(\lambda)}\)</span> by
+solving Eq.\eqref{eq:beta-dy} and Eq.\eqref{eq:beta-dx}</p>
+<p>     2. Obtain <span class="math inline">\(\color{green}{d_y},
+\color{blue}{d_{x_j}}\)</span> following Eq.\eqref{eq:distill}</p>
+<p>     3. Compute feature importance <span class="math inline">\(T(x_j,
+y, \color{blue}{d_{x_j}}, \color{green}{d_y}) = \left[(y -
+\color{green}{d_y})^{T}(x_j -
+\color{blue}{d_{x_j}})\right]^2\)</span></p>
 <p>     4. Compute (two-sided) p-value</p>
 <p><span class="math display">\[
-    p_j = 2\left[1 - \Phi\left( \dfrac{\sqrt{T(x_j, y, \color{blue}{d_{x_j}}, \color{green}{d_y})}}{
-    \sigma\left\lVert {\mathbf{y} - \color{green}{d_y}} \right\rVert} \right) \right]
+    p_j = 2\left[1 - \Phi\left( \dfrac{\sqrt{T(x_j, y,
+\color{blue}{d_{x_j}}, \color{green}{d_y})}}{
+    \sigma\left\lVert {\mathbf{y} - \color{green}{d_y}} \right\rVert}
+\right) \right]
 \]</span></p>
-<p><strong>SET </strong> <span class="math inline">\(p_j = 1\)</span> for all <span class="math inline">\(j \in [p] \setminus \hat{\mathcal{S}}\)</span></p>
-<p><strong>OUTPUT</strong>: vector of p-values <span class="math inline">\(\boldsymbol{\pi} = \{p_j\}_{j=1}^p\)</span></p>
+<p><strong>SET </strong> <span class="math inline">\(p_j = 1\)</span>
+for all <span class="math inline">\(j \in [p] \setminus
+\hat{\mathcal{S}}\)</span></p>
+<p><strong>OUTPUT</strong>: vector of p-values <span
+class="math inline">\(\boldsymbol{\pi} = \{p_j\}_{j=1}^p\)</span></p>
 <hr />
 <h1 id="iv.-some-remarks">IV. Some Remarks</h1>
-<p>The dCRT framework is promising mainly because it is quite flexible with the usage of loss function. In the distillation step, one needs not to restrict to just <span class="math inline">\(\ell_2\)</span> loss like the Lasso, but could be more creative by using Logistic loss with <span class="math inline">\(\ell_1\)</span> regularization, or even Random Forest for some non-linearity measure as the authors of <span class="citation" data-cites="liu_fast_2020">[3]</span> has suggested in their work. Another mentioned issue is the question about independence of p-values output by Lasso-dCRT in Eq.\eqref{eq:pval-crt}. The ultimate goal of producing p-values is to performing multiple testing procedure with them, and some methods, e.g. Benjamini-Hochberg procedure to control the FDR <span class="citation" data-cites="benjamini_controlling_1995">[10]</span> requires p-values to be independence or at least exhibits positive dependence.</p>
-<p>On computational side, with a runtime complexity of <span class="math inline">\(\mathcal{O}(kp^3)\)</span>, Lasso-dCRT is still relatively slow compare to the Knockoff Filter, as shown in the benchmark of <span class="citation" data-cites="liu_fast_2020">[3]</span>. This likely means that the runtime performance of dCRT is also less impressive compare with the Debiased Lasso. The benchmark of <span class="citation" data-cites="liu_fast_2020">[3]</span> consists only of numerical experiments and a very small-scale genetic dataset (<span class="math inline">\(n=1396, p=164\)</span>), which leaves a question about whether dCRT can scale well in real-life dataset from genetics or brain-imaging, where <span class="math inline">\(p\)</span> could be as big as 100,000.</p>
-<p>As a related note, <span class="citation" data-cites="celentano_lasso_2020">[11]</span> conjectures that Debiased Lasso and the leave-one-out CRT (proposed in the same work) can output similar confidence interval up to some degree in asymptotic regime, assuming the linearity assumption. This is one of the more theoretical questions that remains open, along with a more rigorous analysis of the error-power tradeoff of CRT and dCRT.</p>
+<p>The dCRT framework is promising mainly because it is quite flexible
+with the usage of loss function. In the distillation step, one needs not
+to restrict to just <span class="math inline">\(\ell_2\)</span> loss
+like the Lasso, but could be more creative by using Logistic loss with
+<span class="math inline">\(\ell_1\)</span> regularization, or even
+Random Forest for some non-linearity measure as the authors of <span
+class="citation" data-cites="liu_fast_2020">[3]</span> has suggested in
+their work. Another mentioned issue is the question about independence
+of p-values output by Lasso-dCRT in Eq.\eqref{eq:pval-crt}. The ultimate
+goal of producing p-values is to performing multiple testing procedure
+with them, and some methods, e.g. Benjamini-Hochberg procedure to
+control the FDR <span class="citation"
+data-cites="benjamini_controlling_1995">[10]</span> requires p-values to
+be independence or at least exhibits positive dependence.</p>
+<p>On computational side, with a runtime complexity of <span
+class="math inline">\(\mathcal{O}(kp^3)\)</span>, Lasso-dCRT is still
+relatively slow compare to the Knockoff Filter, as shown in the
+benchmark of <span class="citation"
+data-cites="liu_fast_2020">[3]</span>. This likely means that the
+runtime performance of dCRT is also less impressive compare with the
+Debiased Lasso. The benchmark of <span class="citation"
+data-cites="liu_fast_2020">[3]</span> consists only of numerical
+experiments and a very small-scale genetic dataset (<span
+class="math inline">\(n=1396, p=164\)</span>), which leaves a question
+about whether dCRT can scale well in real-life dataset from genetics or
+brain-imaging, where <span class="math inline">\(p\)</span> could be as
+big as 100,000.</p>
+<p>As a related note, <span class="citation"
+data-cites="celentano_lasso_2020">[11]</span> conjectures that Debiased
+Lasso and the leave-one-out CRT (proposed in the same work) can output
+similar confidence interval up to some degree in asymptotic regime,
+assuming the linearity assumption. This is one of the more theoretical
+questions that remains open, along with a more rigorous analysis of the
+error-power tradeoff of CRT and dCRT.</p>
 <h3 class="unnumbered" id="references">References</h3>
 <div id="refs" class="references csl-bib-body" role="doc-bibliography">
-<div id="ref-shah_hardness_2020" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[1] </div><div class="csl-right-inline"><span class="smallcaps">Shah</span>, R. D. and <span class="smallcaps">Peters</span>, J. (2020). The hardness of conditional independence testing and the generalised covariance measure. <em>The Annals of Statistics</em> <strong>48</strong> 1514–38.</div>
+<div id="ref-shah_hardness_2020" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[1] </div><div
+class="csl-right-inline"><span class="smallcaps">Shah</span>, R. D. and
+<span class="smallcaps">Peters</span>, J. (2020). The hardness of
+conditional independence testing and the generalised covariance measure.
+<em>The Annals of Statistics</em> <strong>48</strong> 1514–38.</div>
 </div>
-<div id="ref-candes_panning_2018" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[2] </div><div class="csl-right-inline"><span class="smallcaps">Candès</span>, E., <span class="smallcaps">Fan</span>, Y., <span class="smallcaps">Janson</span>, L. and <span class="smallcaps">Lv</span>, J. (2018). Panning for gold: <span>‘Model-x’</span> knockoffs for high dimensional controlled variable selection. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> <strong>80</strong> 551–77.</div>
+<div id="ref-candes_panning_2018" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[2] </div><div
+class="csl-right-inline"><span class="smallcaps">Candès</span>, E.,
+<span class="smallcaps">Fan</span>, Y., <span
+class="smallcaps">Janson</span>, L. and <span
+class="smallcaps">Lv</span>, J. (2018). <a
+href="https://doi.org/10.1111/rssb.12265">Panning for gold:
+<span>“Model-x”</span> knockoffs for high dimensional controlled
+variable selection</a>. <em>Journal of the Royal Statistical Society:
+Series B (Statistical Methodology)</em> <strong>80</strong>
+551–77.</div>
 </div>
 <div id="ref-liu_fast_2020" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[3] </div><div class="csl-right-inline"><span class="smallcaps">Liu</span>, M., <span class="smallcaps">Katsevich</span>, E., <span class="smallcaps">Janson</span>, L. and <span class="smallcaps">Ramdas</span>, A. (2020). Fast and <span>Powerful</span> <span>Conditional</span> <span>Randomization</span> <span>Testing</span> via <span>Distillation</span>. <em>arXiv:2006.03980 [stat]</em>.</div>
+<div class="csl-left-margin">[3] </div><div
+class="csl-right-inline"><span class="smallcaps">Liu</span>, M., <span
+class="smallcaps">Katsevich</span>, E., <span
+class="smallcaps">Janson</span>, L. and <span
+class="smallcaps">Ramdas</span>, A. (2020). <a
+href="http://arxiv.org/abs/2006.03980">Fast and <span>Powerful</span>
+<span>Conditional</span> <span>Randomization</span> <span>Testing</span>
+via <span>Distillation</span></a>. <em>arXiv:2006.03980
+[stat]</em>.</div>
 </div>
-<div id="ref-bayati_lasso_2010" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[4] </div><div class="csl-right-inline"><span class="smallcaps">Bayati</span>, M. and <span class="smallcaps">Montanari</span>, A. (2012). The LASSO risk for gaussian matrices. <em>IEEE Transactions on Information Theory</em> <strong>58</strong> 1997–2017.</div>
+<div id="ref-bayati_lasso_2010" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[4] </div><div
+class="csl-right-inline"><span class="smallcaps">Bayati</span>, M. and
+<span class="smallcaps">Montanari</span>, A. (2012). <a
+href="http://arxiv.org/abs/1008.2581">The LASSO risk for gaussian
+matrices</a>. <em>IEEE Transactions on Information Theory</em>
+<strong>58</strong> 1997–2017.</div>
 </div>
-<div id="ref-van_de_geer_asymptotically_2014" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[5] </div><div class="csl-right-inline"><span class="smallcaps">Geer</span>, S. van de, <span class="smallcaps">Bühlmann</span>, P., <span class="smallcaps">Ritov</span>, Y. and <span class="smallcaps">Dezeure</span>, R. (2014). On asymptotically optimal confidence regions and tests for high-dimensional models. <em>The Annals of Statistics</em> <strong>42</strong> 1166–202.</div>
+<div id="ref-van_de_geer_asymptotically_2014" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[5] </div><div
+class="csl-right-inline"><span class="smallcaps">Geer</span>, S. van de,
+<span class="smallcaps">Bühlmann</span>, P., <span
+class="smallcaps">Ritov</span>, Y. and <span
+class="smallcaps">Dezeure</span>, R. (2014). <a
+href="https://doi.org/10.1214/14-AOS1221">On asymptotically optimal
+confidence regions and tests for high-dimensional models</a>. <em>The
+Annals of Statistics</em> <strong>42</strong> 1166–202.</div>
 </div>
-<div id="ref-tibshirani_regression_1996" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[6] </div><div class="csl-right-inline"><span class="smallcaps">Tibshirani</span>, R. (1996). Regression <span>Shrinkage</span> and <span>Selection</span> via the <span>Lasso</span>. <em>Journal of the Royal Statistical Society. Series B (Methodological)</em> <strong>58</strong>.</div>
+<div id="ref-tibshirani_regression_1996" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[6] </div><div
+class="csl-right-inline"><span class="smallcaps">Tibshirani</span>, R.
+(1996). <a href="http://www.jstor.org/stable/2346178">Regression
+<span>Shrinkage</span> and <span>Selection</span> via the
+<span>Lasso</span></a>. <em>Journal of the Royal Statistical Society.
+Series B (Methodological)</em> <strong>58</strong>.</div>
 </div>
-<div id="ref-javanmard_confidence_2014" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[7] </div><div class="csl-right-inline"><span class="smallcaps">Javanmard</span>, A. and <span class="smallcaps">Montanari</span>, A. (2014). Confidence intervals and hypothesis testing for high-dimensional regression. <em>The Journal of Machine Learning Research</em> <strong>15</strong> 2869–909.</div>
+<div id="ref-javanmard_confidence_2014" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[7] </div><div
+class="csl-right-inline"><span class="smallcaps">Javanmard</span>, A.
+and <span class="smallcaps">Montanari</span>, A. (2014). Confidence
+intervals and hypothesis testing for high-dimensional regression.
+<em>The Journal of Machine Learning Research</em> <strong>15</strong>
+2869–909.</div>
 </div>
-<div id="ref-zhang_confidence_2014" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[8] </div><div class="csl-right-inline"><span class="smallcaps">Zhang</span>, C.-H. and <span class="smallcaps">Zhang</span>, S. S. (2014). Confidence intervals for low dimensional parameters in high dimensional linear models. <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> <strong>76</strong> 217–42.</div>
+<div id="ref-zhang_confidence_2014" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[8] </div><div
+class="csl-right-inline"><span class="smallcaps">Zhang</span>, C.-H. and
+<span class="smallcaps">Zhang</span>, S. S. (2014). <a
+href="https://doi.org/10.1111/rssb.12026">Confidence intervals for low
+dimensional parameters in high dimensional linear models</a>.
+<em>Journal of the Royal Statistical Society: Series B (Statistical
+Methodology)</em> <strong>76</strong> 217–42.</div>
 </div>
-<div id="ref-hastie_elements_2009" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[9] </div><div class="csl-right-inline"><span class="smallcaps">Hastie</span>, T., <span class="smallcaps">Tibshirani</span>, R. and <span class="smallcaps">Friedman</span>, J. (2009). <em>The elements of statistical learning: Data mining, inference and prediction</em>.</div>
+<div id="ref-hastie_elements_2009" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[9] </div><div
+class="csl-right-inline"><span class="smallcaps">Hastie</span>, T.,
+<span class="smallcaps">Tibshirani</span>, R. and <span
+class="smallcaps">Friedman</span>, J. (2009). <em><a
+href="http://site.ebrary.com/id/10289757">The elements of statistical
+learning: Data mining, inference and prediction</a></em>.</div>
 </div>
-<div id="ref-benjamini_controlling_1995" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[10] </div><div class="csl-right-inline"><span class="smallcaps">Benjamini</span>, Y. and <span class="smallcaps">Hochberg</span>, Y. (1995). Controlling the <span>False</span> <span>Discovery</span> <span>Rate</span>: <span>A</span> <span>Practical</span> and <span>Powerful</span> <span>Approach</span> to <span>Multiple</span> <span>Testing</span>. <em>Journal of the Royal Statistical Society. Series B (Methodological)</em> <strong>57</strong> 289–300.</div>
+<div id="ref-benjamini_controlling_1995" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[10] </div><div
+class="csl-right-inline"><span class="smallcaps">Benjamini</span>, Y.
+and <span class="smallcaps">Hochberg</span>, Y. (1995). <a
+href="https://www.jstor.org/stable/2346101">Controlling the
+<span>False</span> <span>Discovery</span> <span>Rate</span>:
+<span>A</span> <span>Practical</span> and <span>Powerful</span>
+<span>Approach</span> to <span>Multiple</span> <span>Testing</span></a>.
+<em>Journal of the Royal Statistical Society. Series B
+(Methodological)</em> <strong>57</strong> 289–300.</div>
 </div>
-<div id="ref-celentano_lasso_2020" class="csl-entry" role="doc-biblioentry">
-<div class="csl-left-margin">[11] </div><div class="csl-right-inline"><span class="smallcaps">Celentano</span>, M., <span class="smallcaps">Montanari</span>, A. and <span class="smallcaps">Wei</span>, Y. (2020). The <span>Lasso</span> with general <span>Gaussian</span> designs with applications to hypothesis testing. <em>arXiv:2007.13716 [cs, math, stat]</em>.</div>
+<div id="ref-celentano_lasso_2020" class="csl-entry"
+role="doc-biblioentry">
+<div class="csl-left-margin">[11] </div><div
+class="csl-right-inline"><span class="smallcaps">Celentano</span>, M.,
+<span class="smallcaps">Montanari</span>, A. and <span
+class="smallcaps">Wei</span>, Y. (2020). <a
+href="http://arxiv.org/abs/2007.13716">The <span>Lasso</span> with
+general <span>Gaussian</span> designs with applications to hypothesis
+testing</a>. <em>arXiv:2007.13716 [cs, math, stat]</em>.</div>
 </div>
 </div>
 </post-content>
@@ -218,7 +566,7 @@ p_j = \dfrac{1}{B + 1} \left\{1 + \sum^{B}_{b=1}
                 
                     <hr />
                     <p style="text-align: center; margin-bottom: 10px">
-                    <a href="" style="color: black"><small>Last update: 07/04/2022</small></a>
+                    <a href="" style="color: black"><small>Last update: 14/04/2022</small></a>
                     </p>
                 
             </div>
