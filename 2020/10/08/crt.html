@@ -83,22 +83,23 @@ high-dimension. We begin by formalize our problem.</p>
 \}^n_{i=1}\)</span> denote a dataset of <span
 class="math inline">\(n\)</span> i.i.d observations. For each <span
 class="math inline">\(i = \{1, 2, \dots, n\}\)</span>, the vector <span
-class="math inline">\(\mathbf{x}_i \in \mathbb{R}^p\)</span> is one
-observation of <span class="math inline">\(p\)</span> variables and
-<span class="math inline">\(y_i\)</span> its response. In real-life,
-<span class="math inline">\(\mathbf{x}_i\)</span> could be the profile
-of user <span class="math inline">\(i\)</span> on YouTube (gender, age,
-country of residence, watching history, etc.), with <span
+class="math inline">\(\mathbf{x}_i
+\in \mathbb{R}^p\)</span> is one observation of <span
+class="math inline">\(p\)</span> variables and <span
+class="math inline">\(y_i\)</span> its response. In real-life, <span
+class="math inline">\(\mathbf{x}_i\)</span> could be the profile of user
+<span class="math inline">\(i\)</span> on YouTube (gender, age, country
+of residence, watching history, etc.), with <span
 class="math inline">\(y_i\)</span> is the most recent video she watched.
 In the form of matrix representation, the design matrix with each row
 corresponds to one observation in <span
 class="math inline">\(\mathcal{D}\)</span> will be denoted <span
 class="math inline">\(\mathbf{X} \in \mathbb{R}^{n \times p}\)</span>,
-and <span class="math inline">\(\mathbf{y} \in \mathbb{R}^n\)</span> the
-response vector. For this system of notation, the <strong>conditional
-independence testing</strong> problem is defined to be the task of
-simultaneously testing <span class="math inline">\(m\)</span>
-hypotheses:</p>
+and <span class="math inline">\(\mathbf{y} \in
+\mathbb{R}^n\)</span> the response vector. For this system of notation,
+the <strong>conditional independence testing</strong> problem is defined
+to be the task of simultaneously testing <span
+class="math inline">\(m\)</span> hypotheses:</p>
 <p><span class="math display">\[
 \text{(null) }\mathcal{H}_{0j}: \mathbf{x_j} \perp \!y_j \mid
 \mathbf{X}_{-j} \quad \text{vs.}
@@ -220,13 +221,13 @@ p\)</span> do</p>
 <p>     <strong>FOR </strong> <span class="math inline">\(b = 1, 2,
 \dots, B\)</span> do</p>
 <p>         1. Sampling new column <span
-class="math inline">\(\mathbf{\tilde{x}}_j \sim \mathcal{P}(\mathbf{x}_j
-\mid \mathbf{X}_{-j})\)</span></p>
+class="math inline">\(\mathbf{\tilde{x}}_j \sim
+\mathcal{P}(\mathbf{x}_j \mid \mathbf{X}_{-j})\)</span></p>
 <p>         2. Combine <span
 class="math inline">\(\mathbf{\tilde{x}}_j\)</span> with original matrix
 <span class="math inline">\(\mathbf{X}_{-j}\)</span> to form new matrix
-<span class="math inline">\(\mathbf{\tilde{X}}^{(b)} \in \mathbb{R}^{n
-\times p}\)</span></p>
+<span class="math inline">\(\mathbf{\tilde{X}}^{(b)} \in
+\mathbb{R}^{n \times p}\)</span></p>
 <p>         3. Compute feature importance <span
 class="math inline">\(T_j(\mathbf{\tilde{X}}^{(b)},
 \mathbf{y})\)</span></p>
@@ -357,9 +358,9 @@ class="math inline">\(k\)</span> is the total number of selected
 variables post-screening and is often much smaller than <span
 class="math inline">\(p\)</span> in sparsity regime. More formally, the
 screening step return the estimation of the support <span
-class="math inline">\(\hat{\mathcal{S}} := \{j \in [p]: \hat{\beta}_j
-\neq 0\}\)</span>, and <span class="math inline">\(k\)</span> is the
-cardinality of this set.</p>
+class="math inline">\(\hat{\mathcal{S}} := \{j \in [p]:
+\hat{\beta}_j \neq 0\}\)</span>, and <span
+class="math inline">\(k\)</span> is the cardinality of this set.</p>
 <p>A full algorithm block is then as follows.</p>
 <hr />
 <p><strong>Algorithm 2: Lasso-Distilled Conditional Randomization
